@@ -42,7 +42,7 @@ object ResumableQuery {
     import akka.pattern.ask
 
     val writer = system.actorOf(Props(new ResumableQueryWriter(queryName, snapshotInterval, journalPluginId, snapshotPluginId)))
-    val sink = Flow[(Long, Any)].map(_._1).mapAsync(1) { offset =>
+    val sink = Flow[(Long, Any)].map { case (offset, _) => offset }.mapAsync(1) { offset =>
       writer ? offset
     }.toMat(Sink.ignore)(Keep.right)
 

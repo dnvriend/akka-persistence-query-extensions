@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 #!/bin/bash
-export CODACY_PROJECT_TOKEN=$REACTIVE_AMQ_TOKEN
+export CODACY_PROJECT_TOKEN=$AKKA_QUERY_EXTENSION
 echo "project token: $CODACY_PROJECT_TOKEN"
 sbt clean coverage test
 sbt coverageReport
