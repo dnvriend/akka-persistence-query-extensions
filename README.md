@@ -1,8 +1,9 @@
 # akka-persistence-query-extensions
 
-[![License](http://img.shields.io/:license-Apache%202-red.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt)
 [![Build Status](https://travis-ci.org/dnvriend/akka-persistence-query-extensions.svg?branch=master)](https://travis-ci.org/dnvriend/akka-persistence-query-extensions)
+[![Download](https://api.bintray.com/packages/dnvriend/maven/akka-persistence-query-extensions/images/download.svg)](https://bintray.com/dnvriend/maven/akka-persistence-query-extensions/_latestVersion)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/641e2c61ff8f40048e538b34a433de66)](https://www.codacy.com/app/dnvriend/akka-persistence-query-extensions?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dnvriend/akka-persistence-query-extensions&amp;utm_campaign=Badge_Grade)
+[![License](http://img.shields.io/:license-Apache%202-red.svg)](http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 akka-persistence-query-extensions contain components that are usable with akka-persistence-query
 
