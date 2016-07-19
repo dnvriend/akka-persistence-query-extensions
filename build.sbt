@@ -39,7 +39,7 @@ libraryDependencies ++= {
     "org.scalaz" %% "scalaz-core" % scalazVersion,
     "commons-io" % "commons-io" % "2.5",
     "com.github.dnvriend" %% "reactive-activemq" % "0.0.23",
-    "com.github.dnvriend" %% "akka-persistence-inmemory" % "1.3.2" % Test,
+    "com.github.dnvriend" %% "akka-persistence-inmemory" % "1.3.4" % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion % Test,

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-// enable publishing to jcenter
 homepage := Some(url("https://github.com/dnvriend/akka-persistence-query-extensions"))
 
 pomIncludeRepository := (_ => false)
