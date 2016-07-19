@@ -24,10 +24,6 @@ Contributions via GitHub pull requests are gladly accepted from their original a
 
 This code is open source software licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
 
-# Whats new?
-- v0.0.1 (2016-07-18)
-  - Initial release
-
 ## Components
 The library contains the following components:
 
@@ -222,5 +218,12 @@ an XML file. It can be used together with akka-stream's processing stages and th
 by other components. It can also be used with `reactive-activemq`'s
 `akka.stream.integration.activemq.ActiveMqProducer` to send these messages to a VirtualTopic.
 
+# Whats new?
+- v0.0.2 (2016-07-19)
+  - Configuration for the ResumableQuery
+  
+- v0.0.1 (2016-07-18)
+  - Initial release
 
+Have fun!
 
