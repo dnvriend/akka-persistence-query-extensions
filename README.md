@@ -13,7 +13,7 @@ Add the following to your `build.sbt`:
 ```scala
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-query-extensions" % "0.0.1"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-query-extensions" % "0.0.2"
 ```
 
 ## Contribution policy ##
@@ -37,7 +37,38 @@ the akka-persistence journal so that the query can be resumed after being restar
 
 The component only supports eventsByTag or eventsByPersistenceId for they return a stream of `EventEnvelope`.
 
-Usage:
+### Configuration:
+The resumable query component can be configured globally. This setting is used for all queries:
+
+```
+resumable-query {
+  snapshot-interval = "250"
+  backpressure-buffer = "1"
+  journal-plugin-id = ""
+  snapshot-plugin-id = ""
+}
+```
+
+It supports configuring:
+
+- snapshot-interval,
+- backpressure-buffer,
+- the journal plugin to use, when left empty, the default journal plugin will be used,
+- the snapshot plugin to use, when left empty, the default snapshot plugin will be used.
+
+### Query name
+Each query should have an unique name, like for example `MessageReceivedEventQuery`, which will be used to write the offset and recover from it. The query name can also be used to configure a query individually. To configure the `MessageReceivedEventQuery`, the following configuration should be created:
+
+```
+MessageReceivedEventQuery {
+  snapshot-interval = "250"
+  backpressure-buffer = "1"
+  journal-plugin-id = ""
+  snapshot-plugin-id = ""
+}
+```
+
+### Example usage:
 
 ```scala
 import akka.stream.scaladsl.{ FileIO, Flow, Source }
