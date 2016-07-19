@@ -17,154 +17,76 @@
 package akka.stream.integration
 package xml
 
-import akka.NotUsed
-import akka.stream.integration.PersonDomain.{ Address, Person }
+import akka.stream.integration.PersonDomain.{Address, Person}
 import akka.stream.scaladsl.Flow
-import akka.stream.{ Attributes, FlowShape, Inlet, Outlet }
-import akka.stream.stage.{ GraphStage, GraphStageLogic, InHandler, OutHandler }
 
-import scala.xml.pull.{ EvElemEnd, EvElemStart, EvText, XMLEvent }
+import scala.collection.immutable._
+import scala.xml.pull.{EvElemEnd, EvElemStart, EvText, XMLEvent}
 
 object PersonParser {
-  def apply(): Flow[XMLEvent, Person, NotUsed] = Flow.fromGraph(new PersonParser)
-}
+  def apply() = Flow[XMLEvent].statefulMapConcat[Person] { () =>
+    var person = Person()
+    var address = Address()
+    var inFirstName = false
+    var inLastName = false
+    var inAge = false
+    var inStreet = false
+    var inHouseNr = false
+    var inZip = false
+    var inCity = false
+    val empty = Iterable.empty[Person]
 
-class PersonParser extends GraphStage[FlowShape[XMLEvent, Person]] {
-  val in = Inlet[XMLEvent]("PersonParser.in")
-  val out = Outlet[Person]("PersonParser.out")
+    event => event match {
+      case EvElemStart(_, "first-name", _, _) =>
+        inFirstName = true; empty
+      case EvElemStart(_, "last-name", _, _) =>
+        inLastName = true; empty
+      case EvElemStart(_, "age", _, _) =>
+        inAge = true; empty
+      case EvText(text) if inFirstName =>
+        person = person.copy(firstName = text); empty
+      case EvText(text) if inLastName =>
+        person = person.copy(lastName = text); empty
+      case EvText(text) if inAge =>
+        person = person.copy(age = text.toInt); empty
+      case EvElemEnd(_, "first-name") =>
+        inFirstName = false; empty
+      case EvElemEnd(_, "last-name") =>
+        inLastName = false; empty
+      case EvElemEnd(_, "age") =>
+        inAge = false; empty
+      case EvElemStart(_, "street", _, _) =>
+        inStreet = true; empty
+      case EvElemStart(_, "house-number", _, _) =>
+        inHouseNr = true; empty
+      case EvElemStart(_, "zip-code", _, _) =>
+        inZip = true; empty
+      case EvElemStart(_, "city", _, _) =>
+        inCity = true; empty
+      case EvElemEnd(_, "street") =>
+        inStreet = false; empty
+      case EvElemEnd(_, "house-number") =>
+        inHouseNr = false; empty
+      case EvElemEnd(_, "zip-code") =>
+        inZip = false; empty
+      case EvElemEnd(_, "city") =>
+        inCity = false; empty
+      case EvText(text) if inStreet =>
+        address = address.copy(street = text); empty
+      case EvText(text) if inHouseNr =>
+        address = address.copy(houseNumber = text); empty
+      case EvText(text) if inZip =>
+        address = address.copy(zipCode = text); empty
+      case EvText(text) if inCity =>
+        address = address.copy(city = text); empty
 
-  override def shape: FlowShape[XMLEvent, Person] = FlowShape.of(in, out)
+      case EvElemEnd(_, "person") =>
+        val iter = Iterable(person.copy(address = address))
+        person = Person()
+        address = Address()
+        iter
 
-  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
-    new GraphStageLogic(shape) {
-      var person = Person()
-      var address = Address()
-      val personHandler = new PersonHandler
-      val addressHandler = new AddressHandler
-
-      class PersonHandler extends InHandler {
-        var inFirstName: Boolean = false
-        var inLastName: Boolean = false
-        var inAge: Boolean = false
-        override def onPush(): Unit = grab(in) match {
-          case EvElemEnd(_, "person") =>
-            val personToEmit = person.copy(address = address)
-            push(out, personToEmit)
-            person = Person()
-            address = Address()
-
-          case EvElemStart(_, "first-name", _, _) =>
-            inFirstName = true
-            pull(in)
-
-          case EvElemStart(_, "last-name", _, _) =>
-            inLastName = true
-            pull(in)
-
-          case EvElemStart(_, "age", _, _) =>
-            inAge = true
-            pull(in)
-
-          case EvText(text) if inFirstName =>
-            person = person.copy(firstName = text)
-            pull(in)
-
-          case EvText(text) if inLastName =>
-            person = person.copy(lastName = text)
-            pull(in)
-
-          case EvText(text) if inAge =>
-            person = person.copy(age = text.toInt)
-            pull(in)
-
-          case EvElemEnd(_, "first-name") =>
-            inFirstName = false
-            pull(in)
-
-          case EvElemEnd(_, "last-name") =>
-            inLastName = false
-            pull(in)
-
-          case EvElemEnd(_, "age") =>
-            inAge = false
-            pull(in)
-
-          case EvElemStart(_, "address", _, _) =>
-            setHandler(in, addressHandler)
-            pull(in)
-
-          case _ =>
-            pull(in)
-        }
-      }
-
-      class AddressHandler extends InHandler {
-        var inStreet: Boolean = false
-        var inHouseNr: Boolean = false
-        var inZip: Boolean = false
-        var inCity: Boolean = false
-        override def onPush(): Unit = grab(in) match {
-          case EvElemEnd(_, "address") =>
-            setHandler(in, personHandler)
-            pull(in)
-
-          case EvElemStart(_, "street", _, _) =>
-            inStreet = true
-            pull(in)
-
-          case EvElemStart(_, "house-number", _, _) =>
-            inHouseNr = true
-            pull(in)
-
-          case EvElemStart(_, "zip-code", _, _) =>
-            inZip = true
-            pull(in)
-
-          case EvElemStart(_, "city", _, _) =>
-            inCity = true
-            pull(in)
-
-          case EvElemEnd(_, "street") =>
-            inStreet = false
-            pull(in)
-
-          case EvElemEnd(_, "house-number") =>
-            inHouseNr = false
-            pull(in)
-
-          case EvElemEnd(_, "zip-code") =>
-            inZip = false
-            pull(in)
-
-          case EvElemEnd(_, "city") =>
-            inCity = false
-            pull(in)
-
-          case EvText(text) if inStreet =>
-            address = address.copy(street = text)
-            pull(in)
-
-          case EvText(text) if inHouseNr =>
-            address = address.copy(houseNumber = text)
-            pull(in)
-
-          case EvText(text) if inZip =>
-            address = address.copy(zipCode = text)
-            pull(in)
-
-          case EvText(text) if inCity =>
-            address = address.copy(city = text)
-            pull(in)
-
-          case _ =>
-            pull(in)
-        }
-      }
-
-      setHandler(in, personHandler)
-      setHandler(out, new OutHandler {
-        override def onPull(): Unit =
-          pull(in)
-      })
+      case _ => empty
     }
+  }
 }
