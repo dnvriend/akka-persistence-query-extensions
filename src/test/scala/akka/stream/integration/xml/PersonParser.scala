@@ -17,11 +17,11 @@
 package akka.stream.integration
 package xml
 
-import akka.stream.integration.PersonDomain.{Address, Person}
+import akka.stream.integration.PersonDomain.{ Address, Person }
 import akka.stream.scaladsl.Flow
 
 import scala.collection.immutable._
-import scala.xml.pull.{EvElemEnd, EvElemStart, EvText, XMLEvent}
+import scala.xml.pull.{ EvElemEnd, EvElemStart, EvText, XMLEvent }
 
 object PersonParser {
   def apply() = Flow[XMLEvent].statefulMapConcat[Person] { () =>

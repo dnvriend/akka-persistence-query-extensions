@@ -25,8 +25,8 @@ import akka.persistence.Persistence
 import akka.persistence.inmemory.query.scaladsl.InMemoryReadJournal
 import akka.persistence.query.PersistenceQuery
 import akka.persistence.query.scaladsl._
-import akka.stream.integration.JsonMessageBuilder._
-import akka.stream.integration.JsonMessageExtractor._
+import akka.stream.integration.JsonCamelMessageBuilder._
+import akka.stream.integration.JsonCamelMessageExtractor._
 import akka.stream.integration.activemq.{ ActiveMqConsumer, ActiveMqProducer }
 import akka.stream.integration.xml.{ PersonParser, XMLEventSource }
 import akka.stream.scaladsl.{ Sink, Source }
