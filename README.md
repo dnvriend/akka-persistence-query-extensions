@@ -13,7 +13,7 @@ Add the following to your `build.sbt`:
 ```scala
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-query-extensions" % "0.0.2"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-query-extensions" % "0.0.3"
 ```
 
 ## Contribution policy ##
