@@ -14,26 +14,13 @@
  * limitations under the License.
  */
 
-package akka.stream.integration
-package xml
+package akka.stream.contrib
 
-import scala.concurrent.duration._
+import akka.stream.scaladsl.Sink
 
-class PersonXmlProcessorTest extends TestSpec {
-  it should "process full person" in {
-    withTestXMLPersonParser()(PersonsXmlFile) { tp =>
-      tp.request(1)
-      tp.expectNext(testPerson1)
-      tp.expectNoMsg(100.millis)
-    }
-  }
+import scala.concurrent.Future
 
-  it should "count a lot of persons" in {
-    withInputStream(LotOfPersonsXmlFile) { is =>
-      XMLEventSource.fromInputStream(is)
-        .via(PersonParser.flow)
-        .runFold(0) { case (c, _) => c + 1 }
-        .futureValue shouldBe 4400
-    }
-  }
+object Counter {
+  def apply[A](): Sink[A, Future[Long]] = akka.stream.scaladsl.Sink.fold(0L) { case (c, _) => c + 1 }
+  def sink[A]: Sink[A, Future[Long]] = apply()
 }

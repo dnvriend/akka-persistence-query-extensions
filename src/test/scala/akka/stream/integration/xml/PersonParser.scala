@@ -18,13 +18,12 @@ package akka.stream.integration
 package xml
 
 import akka.stream.integration.PersonDomain.{ Address, Person }
-import akka.stream.scaladsl.Flow
 
-import scala.collection.immutable._
-import scala.xml.pull.{ EvElemEnd, EvElemStart, EvText, XMLEvent }
+import scala.xml.pull.{ EvElemEnd, EvElemStart, EvText }
 
 object PersonParser {
-  def apply() = Flow[XMLEvent].statefulMapConcat[Person] { () =>
+  val flow = {
+    import XMLParser._
     var person = Person()
     var address = Address()
     var inFirstName = false
@@ -34,59 +33,59 @@ object PersonParser {
     var inHouseNr = false
     var inZip = false
     var inCity = false
-    val empty = Iterable.empty[Person]
 
-    event => event match {
+    XMLParser.flow {
       case EvElemStart(_, "first-name", _, _) =>
-        inFirstName = true; empty
+        inFirstName = true; emit()
       case EvElemStart(_, "last-name", _, _) =>
-        inLastName = true; empty
+        inLastName = true; emit()
       case EvElemStart(_, "age", _, _) =>
-        inAge = true; empty
+        inAge = true; emit()
+
       case EvText(text) if inFirstName =>
-        person = person.copy(firstName = text); empty
+        person = person.copy(firstName = text); emit()
       case EvText(text) if inLastName =>
-        person = person.copy(lastName = text); empty
+        person = person.copy(lastName = text); emit()
       case EvText(text) if inAge =>
-        person = person.copy(age = text.toInt); empty
+        person = person.copy(age = text.toInt); emit()
+
       case EvElemEnd(_, "first-name") =>
-        inFirstName = false; empty
+        inFirstName = false; emit()
       case EvElemEnd(_, "last-name") =>
-        inLastName = false; empty
+        inLastName = false; emit()
       case EvElemEnd(_, "age") =>
-        inAge = false; empty
+        inAge = false; emit()
       case EvElemStart(_, "street", _, _) =>
-        inStreet = true; empty
+        inStreet = true; emit()
       case EvElemStart(_, "house-number", _, _) =>
-        inHouseNr = true; empty
+        inHouseNr = true; emit()
       case EvElemStart(_, "zip-code", _, _) =>
-        inZip = true; empty
+        inZip = true; emit()
       case EvElemStart(_, "city", _, _) =>
-        inCity = true; empty
+        inCity = true; emit()
       case EvElemEnd(_, "street") =>
-        inStreet = false; empty
+        inStreet = false; emit()
       case EvElemEnd(_, "house-number") =>
-        inHouseNr = false; empty
+        inHouseNr = false; emit()
       case EvElemEnd(_, "zip-code") =>
-        inZip = false; empty
+        inZip = false; emit()
       case EvElemEnd(_, "city") =>
-        inCity = false; empty
+        inCity = false; emit()
+
       case EvText(text) if inStreet =>
-        address = address.copy(street = text); empty
+        address = address.copy(street = text); emit()
       case EvText(text) if inHouseNr =>
-        address = address.copy(houseNumber = text); empty
+        address = address.copy(houseNumber = text); emit()
       case EvText(text) if inZip =>
-        address = address.copy(zipCode = text); empty
+        address = address.copy(zipCode = text); emit()
       case EvText(text) if inCity =>
-        address = address.copy(city = text); empty
+        address = address.copy(city = text); emit()
 
       case EvElemEnd(_, "person") =>
-        val iter = Iterable(person.copy(address = address))
+        val iter = emit(person.copy(address = address))
         person = Person()
         address = Address()
         iter
-
-      case _ => empty
     }
   }
 }

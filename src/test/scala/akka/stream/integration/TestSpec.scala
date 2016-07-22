@@ -108,7 +108,7 @@ trait TestSpec extends FlatSpec
 
   def withTestXMLPersonParser()(filename: String)(f: TestSubscriber.Probe[Person] => Unit): Unit =
     withInputStream(filename) { is =>
-      f(XMLEventSource.fromInputStream(is).via(PersonParser()).runWith(TestSink.probe[Person]))
+      f(XMLEventSource.fromInputStream(is).via(PersonParser.flow).runWith(TestSink.probe[Person]))
     }
 
   implicit class SourceOps[A](src: Source[A, NotUsed]) {
