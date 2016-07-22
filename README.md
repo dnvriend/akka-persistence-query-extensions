@@ -220,7 +220,7 @@ by other components. It can also be used with `reactive-activemq`'s
 
 ## akka.stream.integration.xml.XMLParser
 It should be easy to write XML parsers to process large XML files efficiently. Most often this means reading the XML
-sequentially, parsing a known XML fragment and converting it to DTO's using case classes. For such a use case the
+sequentially, parsing a known XML fragment and converting it to DTOs using case classes. For such a use case the
 `akka.stream.integration.xml.XMLParser` should help you get you up and running fast!
 
 For example, let's process the following XML:
@@ -291,7 +291,7 @@ For a more complex example, please take a look at `akka.stream.integration.xml.P
 # Whats new?
 - v0.0.4 (2016-07-22)
   - Added a `akka.stream.contrib.Counter.sink`, counts consumed elements and returns Future[Long],
-  - Added a `akka.stream.integration.xml.XMLParser` that can help with creating an XMLParser for your types eg:
+  - Added a `akka.stream.integration.xml.XMLParser` for parsing large XML files sequentially.
 
 - v0.0.3 (2016-07-20)
   - changes
