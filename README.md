@@ -13,7 +13,7 @@ Add the following to your `build.sbt`:
 ```scala
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-query-extensions" % "0.0.4"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-query-extensions" % "0.0.5"
 ```
 
 ## Contribution policy ##
@@ -202,93 +202,11 @@ val consumer: Source[AckUTup[MessageReceived], ActorRef] =
 AckJournal(consumer, preProcessor = Flow[ImportDrawResultsFileMessageReceivedEvent].log("com.github.dnvriend.amq.consumer"))
 ```
 
-## akka.stream.integration.io.DigestCalculator
-Given a stream of ByteString, it calculates a digest given a certain Algorithm.
-
-## akka.stream.integration.io.FileUtils
-A stage that does file operations. Very handy for stream processing file operations.
-
-## akka.stream.integration.xml.Validation
-Given a stream of ByteString, it validates an XML file given an XSD.
-
-## akka.stream.integration.xml.XMLEventSource
-Given an inputstream or filename, it creates a `Source[XMLEvent, NotUsed]` that can be used to process
-an XML file. It can be used together with akka-stream's processing stages and the
-`akka.persistence.query.extension.Journal` to store the transformed messages in the journal to be consumed
-by other components. It can also be used with `reactive-activemq`'s
-`akka.stream.integration.activemq.ActiveMqProducer` to send these messages to a VirtualTopic.
-
-## akka.stream.integration.xml.XMLParser
-It should be easy to write XML parsers to process large XML files efficiently. Most often this means reading the XML
-sequentially, parsing a known XML fragment and converting it to DTOs using case classes. For such a use case the
-`akka.stream.integration.xml.XMLParser` should help you get you up and running fast!
-
-For example, let's process the following XML:
-
-```xml
-<orders>
-    <order id="1">
-        <item name="Pizza" price="12.00">
-            <pizza>
-                <crust type="thin" size="14"/>
-                <topping>cheese</topping>
-                <topping>sausage</topping>
-            </pizza>
-        </item>
-        <item name="Breadsticks" price="4.00"/>
-        <tax type="federal">0.80</tax>
-        <tax type="state">0.80</tax>
-        <tax type="local">0.40</tax>
-    </order>
-</orders>
-```
-
-Imagine we are interested in only orders, and only the tax, lets write two parsers:
-
-```scala
-import scala.xml.pull._
-import akka.stream.scaladsl._
-import akka.stream.integration.xml.XMLParser
-import akka.stream.integration.xml.XMLParser._
-import akka.stream.integration.xml.XMLEventSource
-
-case class Order(id: String)
-
-val orderParser: Flow[XMLEvent, Order] = {
- var orderId: String = null
- XMLParser.flow {
-  case EvElemStart(_, "order", meta, _) ⇒
-    orderId = getAttr(meta)("id"); emit()
-  case EvElemEnd(_, "order") ⇒
-    emit(Order(orderId))
- }
-}
-
-case class Tax(taxType: String, value: String)
-
-val tagParser: Flow[XMLEvent, Tax] = {
-  var taxType: String = null
-  var taxValue: String = null
-  XMLParser.flow {
-    case EvElemStart(_, "tax", meta, _) =>
-      taxType = getAttr(meta)("type"); emit()
-    case EvText(text) ⇒
-      taxValue = text; emit()
-    case EvElemEnd(_, "tax") ⇒
-      emit(Tax(taxType, taxValue))
-  }
-}
-
-XMLEventSource.fromFileName("orders.xml")
- .via(orderParser).runForeach(println)
-
-XMLEventSource.fromFileName("orders.xml")
- .via(tagParser).runForeach(println)
-```
-
-For a more complex example, please take a look at `akka.stream.integration.xml.PersonParser` in the test package of this library.
-
 # Whats new?
+- v0.0.5 (2016-07-23)
+  - Moved all non-akka-persistence components to the non-official [akka-stream-extensions](https://github.com/dnvriend/akka-stream-extensions) project.
+  - Journal by default uses the non-official EventWriter bulk API, which is only supported by [akka-persistence-jdbc](https://github.com/dnvriend/akka-persistence-jdbc) and [akka-persistence-inmemory](https://github.com/dnvriend/akka-persistence-inmemory) for bulk loading events.
+
 - v0.0.4 (2016-07-22)
   - Added a `akka.stream.contrib.Counter.sink`, counts consumed elements and returns Future[Long],
   - Added a `akka.stream.integration.xml.XMLParser` for parsing large XML files sequentially.
