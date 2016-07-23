@@ -17,11 +17,11 @@
 package akka.persistence.query.extension
 
 import akka.actor.ActorSystem
+import akka.persistence.query.scaladsl.{ EventWriter, ReadJournal }
 import akka.stream.Materializer
 import akka.stream.integration.AckUTup
 import akka.stream.integration.activemq.{ AckSink, ActiveMqFlow }
 import akka.stream.scaladsl._
-import akka.util.Timeout
 import akka.{ Done, NotUsed }
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -36,10 +36,16 @@ object AckJournal {
   /**
    * Returns an [[akka.stream.scaladsl.Flow]] that writes messages to akka-persistence and acks each message.
    */
-  def apply[S, T, M](source: Source[AckUTup[S], M], tags: Any => Set[String] = empty, preProcessor: Flow[S, T, NotUsed], journalPluginId: String = "")(implicit system: ActorSystem, ec: ExecutionContext, mat: Materializer, timeout: Timeout): Future[Done] =
+  def apply[S, T, M](
+    source: Source[AckUTup[S], M],
+    tags: Any => Set[String] = empty,
+    preProcessor: Flow[S, T, NotUsed],
+    readJournal: ReadJournal with EventWriter
+  )(implicit system: ActorSystem, ec: ExecutionContext, mat: Materializer): Future[Done] = {
     ActiveMqFlow.applyMat(source, AckSink.foreach[Unit](_ => ()))(Keep.right)
       .via(preProcessor)
-      .via(Journal(tags, journalPluginId))
+      .via(Journal(tags, readJournal))
       .join(Flow[T].map(_ => ()))
       .run()
+  }
 }

@@ -28,7 +28,6 @@ import akka.persistence.query.scaladsl._
 import akka.stream.integration.JsonCamelMessageBuilder._
 import akka.stream.integration.JsonCamelMessageExtractor._
 import akka.stream.integration.activemq.{ ActiveMqConsumer, ActiveMqProducer }
-import akka.stream.integration.xml.{ PersonParser, XMLEventSource }
 import akka.stream.scaladsl.{ Sink, Source }
 import akka.stream.testkit.scaladsl.{ TestSink, TestSource }
 import akka.stream.testkit.{ TestPublisher, TestSubscriber }
@@ -76,7 +75,7 @@ trait TestSpec extends FlatSpec
 
   val journal = PersistenceQuery(system)
     .readJournalFor(InMemoryReadJournal.Identifier)
-    .asInstanceOf[ReadJournal with CurrentEventsByPersistenceIdQuery with EventsByTagQuery with CurrentEventsByTagQuery with EventsByPersistenceIdQuery]
+    .asInstanceOf[ReadJournal with CurrentEventsByPersistenceIdQuery with EventsByTagQuery with CurrentEventsByTagQuery with EventsByPersistenceIdQuery with EventWriter]
 
   val testPerson1 = Person("Barack", "Obama", 54, Address("Pennsylvania Ave", "1600", "20500", "Washington"))
   val testPerson2 = Person("Anon", "Ymous", 42, Address("Here", "1337", "12345", "InUrBase"))
@@ -100,16 +99,6 @@ trait TestSpec extends FlatSpec
 
   def withRequestResponseSubscriber(endpoint: String = "PersonConsumer")(f: TestSubscriber.Probe[AckTup[Person, Person]] => Unit): Unit =
     f(ActiveMqConsumer[Person, Person](endpoint).runWith(TestSink.probe[AckTup[Person, Person]]))
-
-  def withTestXMLEventSource()(filename: String)(f: TestSubscriber.Probe[XMLEvent] => Unit): Unit =
-    withInputStream(filename) { is =>
-      f(XMLEventSource.fromInputStream(is).runWith(TestSink.probe[XMLEvent]))
-    }
-
-  def withTestXMLPersonParser()(filename: String)(f: TestSubscriber.Probe[Person] => Unit): Unit =
-    withInputStream(filename) { is =>
-      f(XMLEventSource.fromInputStream(is).via(PersonParser.flow).runWith(TestSink.probe[Person]))
-    }
 
   implicit class SourceOps[A](src: Source[A, NotUsed]) {
     def testProbe(f: TestSubscriber.Probe[A] => Unit): Unit =

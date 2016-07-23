@@ -31,7 +31,6 @@ libraryDependencies ++= {
   val scalazVersion = "7.2.4"
   Seq(
     "org.scala-lang.modules" %% "scala-xml" % "1.0.5",
-    "com.typesafe.akka" %% "akka-actor" % akkaVersion,
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
     "com.typesafe.akka" %% "akka-persistence" % akkaVersion,
     "com.typesafe.akka" %% "akka-persistence-query-experimental" % akkaVersion,
@@ -39,7 +38,9 @@ libraryDependencies ++= {
     "org.scalaz" %% "scalaz-core" % scalazVersion,
     "commons-io" % "commons-io" % "2.5",
     "com.github.dnvriend" %% "reactive-activemq" % "0.0.24",
-    "com.github.dnvriend" %% "akka-persistence-inmemory" % "1.3.4" % Test,
+    "com.github.dnvriend" %% "akka-stream-extensions" % "0.0.1",
+    "com.github.dnvriend" %% "akka-persistence-query-writer" % "0.0.1",
+    "com.github.dnvriend" %% "akka-persistence-inmemory" % "1.3.5" % Test,
     "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,
     "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion % Test,

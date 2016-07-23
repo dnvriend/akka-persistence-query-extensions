@@ -21,17 +21,15 @@ import java.util.UUID
 import akka.NotUsed
 import akka.actor.{ ActorLogging, ActorRef, ActorSystem, Props }
 import akka.event.LoggingReceive
-import akka.persistence.JournalProtocol._
 import akka.persistence._
 import akka.persistence.journal.Tagged
-import akka.stream.Materializer
+import akka.persistence.query.scaladsl.EventWriter.WriteEvent
+import akka.persistence.query.scaladsl.{ EventWriter, ReadJournal }
 import akka.stream.actor.ActorSubscriberMessage.{ OnComplete, OnError, OnNext }
 import akka.stream.actor.{ ActorSubscriber, OneByOneRequestStrategy, RequestStrategy }
-import akka.stream.scaladsl.{ Flow, Sink }
-import akka.testkit.TestProbe
+import akka.stream.scaladsl.{ Flow, Sink, Source }
 import akka.util.Timeout
 
-import scala.collection.immutable.Seq
 import scala.concurrent.ExecutionContext
 import scala.util.Failure
 
@@ -41,15 +39,22 @@ import scala.util.Failure
 object Journal {
 
   /**
-   * Returns a [[akka.stream.scaladsl.Flow]] that writes messages to a configured akka-persistence-journal
+   * Returns a [[akka.stream.scaladsl.Flow]] that writes messages to a configured akka-persistence-journal that supports
+   * the EventWriter API
    */
-  def apply[A](tags: Any => Set[String] = empty, journalPluginId: String = "")(implicit system: ActorSystem, ec: ExecutionContext, timeout: Timeout): Flow[A, A, NotUsed] =
-    flow(tags, journalPluginId)
+  def apply[A](tags: Any => Set[String] = empty, readJournal: ReadJournal with EventWriter): Flow[A, A, NotUsed] = {
+    def randomId: String = UUID.randomUUID().toString
+    Flow[A].flatMapConcat { payload =>
+      Source.single(WriteEvent(PersistentRepr(payload, 1, s"JournalWriter-$randomId"), tags(payload)))
+        .via(readJournal.eventWriter).map(_ => payload)
+    }
+  }
 
   /**
-   * Returns an [[akka.stream.scaladsl.Flow]] that writes messages to the akka-persistence-journal.
+   * Returns a [[akka.stream.scaladsl.Flow]] that writes messages to a configured akka-persistence-journal that works with
+   * any akka-persistence journal
    */
-  def flow[A](tags: Any => Set[String] = empty, journalPluginId: String = "")(implicit system: ActorSystem, ec: ExecutionContext, timeout: Timeout): Flow[A, A, NotUsed] =
+  def flow[A](tags: Any => Set[String] = empty, journalPluginId: String = null)(implicit system: ActorSystem, ec: ExecutionContext, timeout: Timeout): Flow[A, A, NotUsed] =
     Flow[A].mapAsync(1) { element =>
       import akka.pattern.ask
       val writer = system.actorOf(Props(new JournalActor(tags, journalPluginId)))
@@ -61,35 +66,6 @@ object Journal {
    */
   def sink[A](tags: Any => Set[String] = empty, journalPluginId: String = ""): Sink[A, ActorRef] =
     Sink.actorSubscriber[A](Props(new JournalActorSubscriber[A](tags, journalPluginId)))
-
-  /**
-   * Returns a [[akka.stream.scaladsl.Flow]] that writes messages to a configured akka-persistence-journal
-   */
-  def flowDirect[A](tags: Any => Set[String] = empty, journalPluginId: String = "")(implicit system: ActorSystem, ec: ExecutionContext, mat: Materializer): Flow[A, A, NotUsed] =
-    Flow[A].map { payload =>
-      val journal = Persistence(system).journalFor(journalPluginId)
-      val tp = TestProbe()
-      val xs: Seq[PersistentEnvelope] = Seq(AtomicWrite(createRepr(payload, tags(payload))))
-      val cmd = WriteMessages(xs, tp.ref, 1)
-      tp.send(journal, cmd)
-      tp.expectMsgPF() {
-        case WriteMessageFailure(msg, cause, _) => throw cause
-        case WriteMessagesFailed(cause)         => throw cause
-        case _                                  => payload
-      }
-    }
-
-  private def createRepr(payload: Any, tags: Set[String])(implicit system: ActorSystem) = {
-    val id = randomId
-    PersistentRepr(
-      payload = if (tags.isEmpty) payload else Tagged(payload, tags),
-      sequenceNr = 1,
-      persistenceId = "JournalWriter-" + id,
-      writerUuid = id
-    )
-  }
-
-  private def randomId = UUID.randomUUID().toString
 
   private def empty(a: Any): Set[String] = Set.empty[String]
 }

@@ -27,7 +27,7 @@ import scala.concurrent.Promise
 class AckJournalTest extends TestSpec {
   it should "write messages to the journal and ack messages" in withPromises { src => promises =>
     val tags = (x: Any) => Set(x.toString)
-    AckJournal(src, tags, Flow[String].map(identity)).toTry should be a 'success
+    AckJournal(src, tags, Flow[String].map(identity), journal).toTry should be a 'success
     promises.foreach {
       case (p, _) => p shouldBe 'completed
     }
@@ -46,7 +46,7 @@ class AckJournalTest extends TestSpec {
     val preProcess = Flow[String].zipWith(Source.fromIterator(() => Iterator from 0)) {
       case (str, i) => s"str-$i"
     }
-    AckJournal(src, tags, preProcess).toTry should be a 'success
+    AckJournal(src, tags, preProcess, journal).toTry should be a 'success
     journal.currentEventsByTag("all", 0).runWith(Sink.seq)
       .futureValue.map(_.event) shouldBe Seq("str-0", "str-1", "str-2", "str-3")
   }
@@ -56,7 +56,7 @@ class AckJournalTest extends TestSpec {
     val preProcess = Flow[String].zipWith(Source.fromIterator(() => Iterator from 0)) {
       case (str, i) => i
     }
-    AckJournal(src, tags, preProcess).toTry should be a 'success
+    AckJournal(src, tags, preProcess, journal).toTry should be a 'success
     journal.currentEventsByTag("all", 0).runWith(Sink.seq)
       .futureValue.map(_.event) shouldBe Seq(0, 1, 2, 3)
   }

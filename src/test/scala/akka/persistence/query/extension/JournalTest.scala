@@ -17,16 +17,19 @@
 package akka.persistence.query.extension
 
 import akka.stream.integration.TestSpec
+import akka.stream.scaladsl.extension.{ Sink => S }
 import akka.stream.scaladsl.{ Sink, Source }
 
 class JournalTest extends TestSpec {
-  "flow via persistent actor" should "Write 100 messages to the journal" in {
-    Source.repeat("foo").take(100).via(Journal.flow(_ => Set("foo"))).runWith(Sink.ignore).futureValue
-    journal.currentEventsByTag("foo", 0).runFold(0L) { case (c, e) => c + 1 }.futureValue shouldBe 100
+  final val NumMessages = 1000
+
+  "flow via persistent actor" should s"Write $NumMessages messages to the journal using the EventWriter API (bulk load ETL)" in {
+    Source.repeat("foo").take(NumMessages).via(Journal(_ => Set("foo"), journal)).runWith(Sink.ignore).futureValue
+    journal.currentEventsByTag("foo", 0).runWith(S.count).futureValue shouldBe NumMessages
   }
 
-  "flow via direct journal" should "Write messages to the journal" in {
-    Source.repeat("foo").take(100).via(Journal.flowDirect(_ => Set("foo"))).runWith(Sink.ignore).futureValue
-    journal.currentEventsByTag("foo", 0).runFold(0L) { case (c, e) => c + 1 }.futureValue shouldBe 100
+  "flow via persistent actor" should s"Write $NumMessages messages to the journal using a persistent-actor" in {
+    Source.repeat("foo").take(NumMessages).via(Journal.flow(_ => Set("foo"))).runWith(Sink.ignore).futureValue
+    journal.currentEventsByTag("foo", 0).runWith(S.count).futureValue shouldBe NumMessages
   }
 }
