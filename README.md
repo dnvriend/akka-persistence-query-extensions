@@ -13,7 +13,7 @@ Add the following to your `build.sbt`:
 ```scala
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-query-extensions" % "0.0.5"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-query-extensions" % "0.0.6"
 ```
 
 ## Contribution policy ##
@@ -84,7 +84,7 @@ ResumableQuery("MessageReceivedEventQuery", offset ⇒ journal.eventsByTag(class
 ResumableQuery("GenerateMD5Query", offset => journal.eventsByTag(classOf[GenerateMD5Command].getSimpleName, offset + 1))
   .join(fromProtoAs[GenerateMD5Command]
     .via(generateMD5Flow(baseDir))
-    .via(Journal())).run()
+    .via(Journal.flow())).run()
 
 // generating MD5 is relatively easy using FileIO and the
 // akka.stream.integration.io.DigestCalculator
@@ -101,7 +101,7 @@ def generateMD5Flow(implicit log: LoggingAdapter) = Flow[GenerateMD5Command].fla
 // non-completing flow that resumes to validate XSD
 ResumableQuery("ValidateXSDQuery", offset => journal.eventsByTag(classOf[ValidateFile].getSimpleName, offset + 1))
   .join(fromProtoAs[ValidateFile]
-    .via(validateXSDFlow(baseDir)).via(Journal())).run()
+    .via(validateXSDFlow(baseDir)).via(Journal.flow())).run()
 
 // processing files and validating XSD
 def validateXSDFlow(implicit log: LoggingAdapter) = Flow[ValidateFile].flatMapConcat {
@@ -121,7 +121,7 @@ def validateXSDFlow(implicit log: LoggingAdapter) = Flow[ValidateFile].flatMapCo
 // non-completing flow that moves files
 ResumableQuery("MoveToDirQuery", offset => journal.eventsByTag(classOf[MoveToDirCmd].getSimpleName, offset + 1))
   .join(fromProtoAs[MoveToDirCmd]
-    .via(moveToDirFlow).via(Journal())).run()
+    .via(moveToDirFlow).via(Journal.flow())).run()
 
 def moveToHistoryFlow(implicit log: LoggingAdapter) = Flow[MoveToDirCmd].flatMapConcat {
  case MoveToDirCmd(from, to) =>
@@ -203,6 +203,11 @@ AckJournal(consumer, preProcessor = Flow[ImportDrawResultsFileMessageReceivedEve
 ```
 
 # Whats new?
+- v0.0.6 (2016-07-24)
+  - Change to the Journal API, the apply() must not be used as it expresses the wrong intention. Apply should be used for function application only.
+  - Replaced the .apply with .writer which expresses the intension correctly.
+  - Reversed the order of the arguments as defaults should be on the right side.
+
 - v0.0.5 (2016-07-23)
   - Moved all non-akka-persistence components to the non-official [akka-stream-extensions](https://github.com/dnvriend/akka-stream-extensions) project.
   - Journal by default uses the non-official EventWriter bulk API, which is only supported by [akka-persistence-jdbc](https://github.com/dnvriend/akka-persistence-jdbc) and [akka-persistence-inmemory](https://github.com/dnvriend/akka-persistence-inmemory) for bulk loading events.

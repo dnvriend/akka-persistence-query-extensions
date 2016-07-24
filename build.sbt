@@ -18,7 +18,7 @@ name := "akka-persistence-query-extensions"
 
 organization := "com.github.dnvriend"
 
-version := "0.0.6-SNAPSHOT"
+version := "0.0.6"
 
 scalaVersion := "2.11.8"
 

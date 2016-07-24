@@ -20,27 +20,26 @@ import java.util.UUID
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.event.{ Logging, LoggingAdapter }
+import akka.event.{Logging, LoggingAdapter}
 import akka.persistence.Persistence
 import akka.persistence.inmemory.query.scaladsl.InMemoryReadJournal
 import akka.persistence.query.PersistenceQuery
 import akka.persistence.query.scaladsl._
 import akka.stream.integration.JsonCamelMessageBuilder._
 import akka.stream.integration.JsonCamelMessageExtractor._
-import akka.stream.integration.activemq.{ ActiveMqConsumer, ActiveMqProducer }
-import akka.stream.scaladsl.{ Sink, Source }
-import akka.stream.testkit.scaladsl.{ TestSink, TestSource }
-import akka.stream.testkit.{ TestPublisher, TestSubscriber }
-import akka.stream.{ ActorMaterializer, Materializer }
+import akka.stream.integration.activemq.{ActiveMqConsumer, ActiveMqProducer}
+import akka.stream.scaladsl.{Sink, Source}
+import akka.stream.testkit.scaladsl.{TestSink, TestSource}
+import akka.stream.testkit.{TestPublisher, TestSubscriber}
+import akka.stream.{ActorMaterializer, Materializer}
 import akka.util.Timeout
 import org.scalatest._
-import org.scalatest.concurrent.{ Eventually, ScalaFutures }
+import org.scalatest.concurrent.{Eventually, ScalaFutures}
 import spray.json.DefaultJsonProtocol
 
 import scala.concurrent.duration._
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
-import scala.xml.pull.XMLEvent
 
 object PersonDomain extends DefaultJsonProtocol {
 
