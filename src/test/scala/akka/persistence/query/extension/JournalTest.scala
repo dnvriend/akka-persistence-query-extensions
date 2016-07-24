@@ -24,7 +24,7 @@ class JournalTest extends TestSpec {
   final val NumMessages = 1000
 
   "flow via persistent actor" should s"Write $NumMessages messages to the journal using the EventWriter API (bulk load ETL)" in {
-    Source.repeat("foo").take(NumMessages).via(Journal(_ => Set("foo"), journal)).runWith(Sink.ignore).futureValue
+    Source.repeat("foo").take(NumMessages).via(Journal.writer(journal, _ => Set("foo"))).runWith(Sink.ignore).futureValue
     journal.currentEventsByTag("foo", 0).runWith(S.count).futureValue shouldBe NumMessages
   }
 

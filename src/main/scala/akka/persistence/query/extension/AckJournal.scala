@@ -44,7 +44,7 @@ object AckJournal {
   )(implicit system: ActorSystem, ec: ExecutionContext, mat: Materializer): Future[Done] = {
     ActiveMqFlow.applyMat(source, AckSink.foreach[Unit](_ => ()))(Keep.right)
       .via(preProcessor)
-      .via(Journal(tags, readJournal))
+      .via(Journal.writer(readJournal, tags))
       .join(Flow[T].map(_ => ()))
       .run()
   }

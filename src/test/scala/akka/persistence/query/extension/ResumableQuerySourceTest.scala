@@ -48,7 +48,7 @@ class ResumableQuerySourceTest extends TestSpec {
     Source.repeat("foo").take(10)
       .zip(Source.fromIterator(() => Iterator from 1)).map {
         case (a, b) => s"$a-$b"
-      }.via(Journal(_ => Set("foo"), journal)).runWith(Sink.ignore).futureValue
+      }.via(Journal.writer(journal, _ => Set("foo"))).runWith(Sink.ignore).futureValue
 
     // note that the flow only gets the 'EventEnvelope' and not the 'offset -> EventEnvelope' pair.
     withQueryFromOffset("q1") { flow =>
@@ -74,7 +74,7 @@ class ResumableQuerySourceTest extends TestSpec {
     Source.repeat("foo").take(10)
       .zip(Source.fromIterator(() => Iterator from 1)).map {
         case (a, b) => s"$a-$b"
-      }.via(Journal(_ => Set("foo"), journal)).runWith(Sink.ignore).futureValue
+      }.via(Journal.writer(journal, _ => Set("foo"))).runWith(Sink.ignore).futureValue
 
     // q1 to 2
     withQueryFromOffset("q1") { flow =>
@@ -151,7 +151,7 @@ class ResumableQuerySourceTest extends TestSpec {
     Source.repeat("foo").take(10)
       .zip(Source.fromIterator(() => Iterator from 1)).map {
         case (a, b) => s"$a-$b"
-      }.via(Journal(_ => Set("foo"), journal)).runWith(Sink.ignore).futureValue
+      }.via(Journal.writer(journal, _ => Set("foo"))).runWith(Sink.ignore).futureValue
 
     // q1 to 2
     withQueryFromOffsetWithSnapshot("q1", 2) { flow =>

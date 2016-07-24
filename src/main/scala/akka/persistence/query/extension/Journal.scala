@@ -39,10 +39,9 @@ import scala.util.Failure
 object Journal {
 
   /**
-   * Returns a [[akka.stream.scaladsl.Flow]] that writes messages to a configured akka-persistence-journal that supports
-   * the EventWriter API
+   * Returns a [[akka.stream.scaladsl.Flow]] that uses the `EventWriter` API to write messages to the journal.
    */
-  def apply[A](tags: Any => Set[String] = empty, readJournal: ReadJournal with EventWriter): Flow[A, A, NotUsed] = {
+  def writer[A](readJournal: ReadJournal with EventWriter, tags: Any => Set[String] = empty): Flow[A, A, NotUsed] = {
     def randomId: String = UUID.randomUUID().toString
     Flow[A].flatMapConcat { payload =>
       Source.single(WriteEvent(PersistentRepr(payload, 1, s"JournalWriter-$randomId"), tags(payload)))
@@ -51,8 +50,7 @@ object Journal {
   }
 
   /**
-   * Returns a [[akka.stream.scaladsl.Flow]] that writes messages to a configured akka-persistence-journal that works with
-   * any akka-persistence journal
+   * Returns a [[akka.stream.scaladsl.Flow]] that uses a normal `PersistentActor` to write messages to the journal.
    */
   def flow[A](tags: Any => Set[String] = empty, journalPluginId: String = null)(implicit system: ActorSystem, ec: ExecutionContext, timeout: Timeout): Flow[A, A, NotUsed] =
     Flow[A].mapAsync(1) { element =>
@@ -62,7 +60,7 @@ object Journal {
     }
 
   /**
-   * Returns an [[akka.stream.scaladsl.Sink]] that writes messages to the akka-persistence-journal.
+   * Returns an [[akka.stream.scaladsl.Sink]] that uses an `ActorSubscriber` to write messages to the journal
    */
   def sink[A](tags: Any => Set[String] = empty, journalPluginId: String = ""): Sink[A, ActorRef] =
     Sink.actorSubscriber[A](Props(new JournalActorSubscriber[A](tags, journalPluginId)))
