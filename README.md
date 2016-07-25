@@ -166,43 +166,10 @@ object ProtobufAdapterFlow {
 ## akka.persistence.query.extension.Journal
 A flow that stores messages in the journal.
 
-## akka.persistence.query.extension.AckJournal
-A flow that stores messages in the journal, should be used together with `reactive-activemq`'s
-`akka.stream.integration.activemq.ActiveMqConsumer` to store messages from a topic to the journal and acking each message
-effectively removing the messages from the queue.
-
-For example:
-
-```scala
-import akka.stream.integration.activemq.ActiveMqConsumer
-import akka.stream.integration.{ AckUTup, MessageExtractor }
-import spray.json.DefaultJsonProtocol._
-import akka.stream.scaladsl.{ Flow, Source }
-import spray.json._
-
-// type classes for consumer
-import akka.camel.CamelMessage
-import akka.stream.integration.{ MessageExtractor, TestSpec }
-import akka.stream.integration.JsonMessageExtractor._
-import spray.json._
-
-// the case class to marshal/unmarshal
-case class MessageReceived(fileName: String, timestamp: Long)
-
-// the JsonFormat for the case class
-implicit val messageReceivedJsonFormat = jsonFormat2(MessageReceived)
-
-// not really needed as importing `akka.stream.integration.JsonMessageExtractor._`
-// brings this JsonMessageExtractor in implicit scope
-//implicit val messageReceivedCamelFormat = implicitly[MessageExtractor[CamelMessage, MessageReceived]]
-
-// a non-completing flow that receives messages from amq and stores them in the journal
-val consumer: Source[AckUTup[MessageReceived], ActorRef] =
-  ActiveMqConsumer[MessageReceived]("ImportDrawResultsFileConsumer")
-AckJournal(consumer, preProcessor = Flow[ImportDrawResultsFileMessageReceivedEvent].log("com.github.dnvriend.amq.consumer"))
-```
-
 # Whats new?
+- v0.0.7 (2016-07-25)
+  - Removed AckJournal, it only introduced design problems as its functionality can be created using the `akka.stream.integration.activemq.ActiveMqConsumer` with the `akka.persistence.query.extension.Journal.flow` and an `akka.stream.integration.activemq.AckSink.complete`
+
 - v0.0.6 (2016-07-24)
   - Change to the Journal API, the apply() must not be used as it expresses the wrong intention. Apply should be used for function application only.
   - Replaced the .apply with .writer which expresses the intension correctly.
