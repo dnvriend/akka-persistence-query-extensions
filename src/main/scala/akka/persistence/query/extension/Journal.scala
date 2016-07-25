@@ -40,12 +40,14 @@ object Journal {
 
   /**
    * Returns a [[akka.stream.scaladsl.Flow]] that uses the `EventWriter` API to write messages to the journal.
+   * Please note that the event writer will *not* use the event adapters for they are only called by the
+   * Akka Persistence framework when a Persistent Actor persists a message.
    */
-  def writer[A](readJournal: ReadJournal with EventWriter, tags: Any => Set[String] = empty): Flow[A, A, NotUsed] = {
+  def writer(eventWriter: ReadJournal with EventWriter, tags: Any => Set[String] = empty): Flow[Any, Any, NotUsed] = {
     def randomId: String = UUID.randomUUID().toString
-    Flow[A].flatMapConcat { payload =>
+    Flow[Any].flatMapConcat { payload =>
       Source.single(WriteEvent(PersistentRepr(payload, 1, s"JournalWriter-$randomId"), tags(payload)))
-        .via(readJournal.eventWriter).map(_ => payload)
+        .via(eventWriter.eventWriter).map(_ => payload)
     }
   }
 
