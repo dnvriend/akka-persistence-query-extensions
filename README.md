@@ -13,7 +13,7 @@ Add the following to your `build.sbt`:
 ```scala
 resolvers += Resolver.jcenterRepo
 
-libraryDependencies += "com.github.dnvriend" %% "akka-persistence-query-extensions" % "0.0.6"
+libraryDependencies += "com.github.dnvriend" %% "akka-persistence-query-extensions" % "0.0.8"
 ```
 
 ## Contribution policy ##
@@ -167,6 +167,9 @@ object ProtobufAdapterFlow {
 A flow that stores messages in the journal.
 
 # Whats new?
+- v0.0.8 (2016-08-22)
+  - Akka 2.4.8 -> 2.4.9
+
 - v0.0.7 (2016-07-25)
   - Removed AckJournal, it only introduced design problems as its functionality can be created using the `akka.stream.integration.activemq.ActiveMqConsumer` with the `akka.persistence.query.extension.Journal.flow` and an `akka.stream.integration.activemq.AckSink.complete`
 
